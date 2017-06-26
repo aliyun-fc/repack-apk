@@ -34,6 +34,15 @@ go build -o repack *.go
 ./repack -cert-name ANDROIDR -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret -priv-pem /tmp/zip/test.pem -work-dir /tmp/zip
 ```
 
+## Convert keystore
+
+`jarsigner` takes a `.keystore` file as the source of RSA key, to convert it to golang recognizable `.pem`, we need the following lines:
+
+```bash
+keytool -importkeystore -srckeystore test.keystore -destkeystore test.p12 -deststoretype PKCS12
+openssl pkcs12 -in test.p12 -nocerts -nodes -out test.pem
+```
+
 ## How it works
 
 TODO: add a figure here
