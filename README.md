@@ -31,7 +31,7 @@ So it uses little disk space and is very efficient.
 
 cd repacker
 go build -o repack *.go
-./repack -cert-name ANDROIDR -cpid /tmp/zip/cpid -source rockuw/qq.apk -dest rockuw/qq2.apk -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret -priv-pem /tmp/zip/test.pem -work-dir /tmp/zip
+./repack -cert-name ANDROIDR -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret -priv-pem /tmp/zip/test.pem -work-dir /tmp/zip
 ```
 
 ## How it works
@@ -41,7 +41,7 @@ TODO: add a figure here
 1. The [zip format][zip-format] allows appending to zip files without rewrite the entire file
 2. The [great zipmerge][zip-merge] makes appending to zip files as easy as a charm
 3. The great design in [great zipmerge][zip-merge] makes using OSS as the storage backend possible
-4. The great [OSS][oss] features like multipart/upload part by copy/get object by range makes OSS as a perfect storage backend
+4. The great [OSS][oss] features like multipart/uploadPartCopy/getObjectByRange makes OSS as a perfect storage backend
 
 [zip-format]: https://en.wikipedia.org/wiki/Zip_(file_format)
 [zip-merge]: https://github.com/rsc/zipmerge
