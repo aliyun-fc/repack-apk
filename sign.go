@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
-	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -18,9 +17,9 @@ import (
 	"time"
 )
 
-// sha256Sum ...
-func sha256Sum(msg []byte) string {
-	sha := sha256.Sum256(msg)
+// sha1Sum ...
+func sha1Sum(msg []byte) string {
+	sha := sha1.Sum(msg)
 	return base64.StdEncoding.EncodeToString(sha[:])
 }
 

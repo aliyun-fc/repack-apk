@@ -25,11 +25,11 @@ func changeManifest(r *zip.Reader) error {
 	}
 
 	// write MANIFEST.MF
-	digest := sha256Sum([]byte(g.CPIDContent))
+	digest := sha1Sum([]byte(g.CPIDContent))
 	manifest = append(manifest, []byte("Name: cpid\r\n")...)
 	manifest = append(
 		manifest,
-		[]byte(fmt.Sprintf("SHA-256-Digest: %s\r\n", digest))...)
+		[]byte(fmt.Sprintf("SHA1-Digest: %s\r\n", digest))...)
 	manifest = append(manifest, []byte("\r\n")...)
 
 	err = ioutil.WriteFile(
@@ -46,8 +46,8 @@ func changeManifest(r *zip.Reader) error {
 	defer sf.Close()
 
 	sf.WriteString("Signature-Version: 1.0\r\n")
-	mfDigest := sha256Sum(manifest)
-	sf.WriteString(fmt.Sprintf("SHA-256-Digest-Manifest: %s\r\n", mfDigest))
+	mfDigest := sha1Sum(manifest)
+	sf.WriteString(fmt.Sprintf("SHA1-Digest-Manifest: %s\r\n", mfDigest))
 	sf.WriteString("\r\n")
 
 	entries := strings.Split(string(manifest), "\r\n")
@@ -56,9 +56,9 @@ func changeManifest(r *zip.Reader) error {
 			msg := entries[i] + "\r\n"
 			msg += entries[i+1] + "\r\n"
 			msg += "\r\n"
-			md := sha256Sum([]byte(msg))
+			md := sha1Sum([]byte(msg))
 			sf.WriteString(entries[i] + "\r\n")
-			sf.WriteString(fmt.Sprintf("SHA-256-Digest: %s\r\n", md))
+			sf.WriteString(fmt.Sprintf("SHA1-Digest: %s\r\n", md))
 			sf.WriteString("\r\n")
 			i++
 		}
