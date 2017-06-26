@@ -16,6 +16,7 @@ const (
 	SFPath       = "META-INF/%s.SF"
 	RSAPath      = "META-INF/%s.RSA"
 	CPIDPath     = "cpid"
+	LineWidth    = 70
 )
 
 func changeManifest(r *zip.Reader) error {
@@ -53,14 +54,32 @@ func changeManifest(r *zip.Reader) error {
 	entries := strings.Split(string(manifest), "\r\n")
 	for i := 0; i < len(entries); i++ {
 		if strings.HasPrefix(entries[i], "Name: ") {
-			msg := entries[i] + "\r\n"
-			msg += entries[i+1] + "\r\n"
-			msg += "\r\n"
+			nameLine := entries[i]
+			i++
+			if len(nameLine) >= LineWidth {
+				if strings.HasPrefix(entries[i], " ") {
+					nameLine += entries[i][1:]
+					i++
+				}
+			}
+			hashLine := entries[i]
+			i++
+			if len(hashLine) >= LineWidth {
+				if strings.HasPrefix(entries[i], " ") {
+					hashLine += entries[i][1:]
+					i++
+				}
+			}
+			msg := nameLine + "\r\n" + hashLine + "\r\n" + "\r\n"
 			md := sha1Sum([]byte(msg))
-			sf.WriteString(entries[i] + "\r\n")
+			if len(nameLine) > LineWidth {
+				sf.WriteString(nameLine[0:LineWidth] + "\r\n")
+				sf.WriteString(" " + nameLine[70:] + "\r\n")
+			} else {
+				sf.WriteString(nameLine + "\r\n")
+			}
 			sf.WriteString(fmt.Sprintf("SHA1-Digest: %s\r\n", md))
 			sf.WriteString("\r\n")
-			i++
 		}
 	}
 
