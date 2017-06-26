@@ -17,6 +17,11 @@ import (
 	"time"
 )
 
+// consts ...
+const (
+	CertValidYears = 30
+)
+
 // sha1Sum ...
 func sha1Sum(msg []byte) string {
 	sha := sha1.Sum(msg)
@@ -73,6 +78,8 @@ func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error)
 	if _, err := asn1.Unmarshal(b, &c); err != nil {
 		return nil, err
 	}
+	c.TBSCertificate.Validity.NotBefore = time.Now()
+	c.TBSCertificate.Validity.NotAfter = time.Now().AddDate(CertValidYears, 0, 0)
 
 	h := sha1.New()
 	h.Write(msg)
