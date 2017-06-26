@@ -15,10 +15,11 @@ type Config struct {
 	PrivateKeyPEM      string // /path/to/private_key.pem
 	SourceAPK          string //  my-bucket/origin.apk
 	DestAPK            string // my-bucket/dest.apk
-	CPIDFile           string // /path/to/cpid
+	CPIDContent        string // cpid content
 	OSSEndpoint        string
 	OSSAccessKeyID     string
 	OSSAccessKeySecret string
+	OSSSecurityToken   string
 	WorkDir            string // working dir to save temp files
 }
 
@@ -34,10 +35,11 @@ func init() {
 	flag.StringVar(&g.PrivateKeyPEM, "priv-pem", "", "private key pem")
 	flag.StringVar(&g.SourceAPK, "source", "", "source apk")
 	flag.StringVar(&g.DestAPK, "dest", "", "dest apk")
-	flag.StringVar(&g.CPIDFile, "cpid", "", "cpid file")
+	flag.StringVar(&g.CPIDContent, "cpid", "", "cpid content")
 	flag.StringVar(&g.OSSEndpoint, "oss-ep", "", "oss endpoint")
 	flag.StringVar(&g.OSSAccessKeyID, "oss-id", "", "oss access key id")
 	flag.StringVar(&g.OSSAccessKeySecret, "oss-key", "", "oss access key secret")
+	flag.StringVar(&g.OSSSecurityToken, "oss-token", "", "oss security token")
 	flag.StringVar(&g.WorkDir, "work-dir", "", "working dir")
 }
 
@@ -52,7 +54,12 @@ func main() {
 	log.Printf("using config: %s", g.String())
 
 	ossReader, err := NewReader(
-		g.OSSEndpoint, g.OSSAccessKeyID, g.OSSAccessKeySecret, g.SourceAPK)
+		OSSConfig{
+			Endpoint:        g.OSSEndpoint,
+			AccessKeyID:     g.OSSAccessKeyID,
+			AccessKeySecret: g.OSSAccessKeySecret,
+			SecurityToken:   g.OSSSecurityToken,
+		}, g.SourceAPK)
 	if err != nil {
 		perror("oss reader: %v", err)
 	}
@@ -72,8 +79,12 @@ func main() {
 	}
 
 	ossWriter, err := NewWriter(
-		g.OSSEndpoint, g.OSSAccessKeyID, g.OSSAccessKeySecret,
-		g.DestAPK, g.SourceAPK, zipReader.AppendOffset())
+		OSSConfig{
+			Endpoint:        g.OSSEndpoint,
+			AccessKeyID:     g.OSSAccessKeyID,
+			AccessKeySecret: g.OSSAccessKeySecret,
+			SecurityToken:   g.OSSSecurityToken,
+		}, g.DestAPK, g.SourceAPK, zipReader.AppendOffset())
 	if err != nil {
 		perror("oss writer: %v", err)
 	}
@@ -88,7 +99,7 @@ func main() {
 	defer writer.Close()
 
 	// copy cpid file
-	if err := copyFile(writer, "cpid", g.CPIDFile); err != nil {
+	if err := copyCPID(writer); err != nil {
 		perror("copy cpid: %v", err)
 	}
 	// copy meta files: MANIFEST.MF/CERT.SF/CERT.RSA

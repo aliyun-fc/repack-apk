@@ -15,6 +15,7 @@ const (
 	ManifestPath = "META-INF/MANIFEST.MF"
 	SFPath       = "META-INF/%s.SF"
 	RSAPath      = "META-INF/%s.RSA"
+	CPIDPath     = "cpid"
 )
 
 func changeManifest(r *zip.Reader) error {
@@ -23,13 +24,8 @@ func changeManifest(r *zip.Reader) error {
 		return err
 	}
 
-	buf, err := ioutil.ReadFile(g.CPIDFile)
-	if err != nil {
-		return err
-	}
-
 	// write MANIFEST.MF
-	digest := sha256Sum(buf)
+	digest := sha256Sum([]byte(g.CPIDContent))
 	manifest = append(manifest, []byte("Name: cpid\r\n")...)
 	manifest = append(
 		manifest,
@@ -111,6 +107,25 @@ func copyFile(w *zip.Writer, to, src string) error {
 
 	_, err = io.Copy(df, sf)
 	return err
+}
+
+// copyContent ...
+func copyContent(w *zip.Writer, to, content string) error {
+	df, err := w.Create(to)
+	if err != nil {
+		return err
+	}
+
+	n, err := df.Write([]byte(content))
+	if n != len(content) {
+		return fmt.Errorf("expect write %d bytes, actual: %d", len(content), n)
+	}
+	return err
+}
+
+// copyCPID ...
+func copyCPID(w *zip.Writer) error {
+	return copyContent(w, CPIDPath, g.CPIDContent)
 }
 
 // copyMeta ...

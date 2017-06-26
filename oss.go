@@ -18,9 +18,20 @@ type Reader struct {
 	Client *oss.Bucket
 }
 
+// OSSConfig ...
+type OSSConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	AccessKeySecret string
+	SecurityToken   string
+}
+
 // NewReader ...
-func NewReader(endpoint, accessKeyID, accessKeySecret, location string) (*Reader, error) {
-	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
+func NewReader(config OSSConfig, location string) (*Reader, error) {
+	client, err := oss.New(
+		config.Endpoint, config.AccessKeyID, config.AccessKeySecret,
+		oss.SecurityToken(config.SecurityToken))
+
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +53,6 @@ func NewReader(endpoint, accessKeyID, accessKeySecret, location string) (*Reader
 
 // ReadAt reads len(buf) bytes from OSS object at offset
 func (r *Reader) ReadAt(buf []byte, off int64) (int, error) {
-	log.Printf("read at, offset: %d, len: %d", off, len(buf))
 	resp, err := r.Client.GetObject(
 		r.Object, oss.Range(off, off+int64(len(buf))-1))
 	if err != nil {
@@ -91,10 +101,11 @@ type Writer struct {
 }
 
 // NewWriter ...
-func NewWriter(
-	endpoint, accessKeyID, accessKeySecret,
-	location, srcLocation string, offset int64) (*Writer, error) {
-	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
+func NewWriter(config OSSConfig, location, srcLocation string, offset int64) (*Writer, error) {
+	client, err := oss.New(
+		config.Endpoint, config.AccessKeyID, config.AccessKeySecret,
+		oss.SecurityToken(config.SecurityToken))
+
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +151,7 @@ func (w *Writer) Flush() error {
 		return err
 	}
 
+	// TODO: part1 may be too large, split it into multiple parts
 	part1, err := w.Client.UploadPartCopy(
 		up, w.SrcBucket, w.SrcObject, 0, w.offset, 1)
 	if err != nil {
