@@ -11,9 +11,9 @@ import (
 
 // Config ...
 type Config struct {
-	CertName           string // TEST.SF and TEST.RSA
+	CertName           string // "TEST" for TEST.SF and TEST.RSA
 	PrivateKeyPEM      string // /path/to/private_key.pem
-	SourceAPK          string //  my-bucket/origin.apk
+	SourceAPK          string // my-bucket/origin.apk
 	DestAPK            string // my-bucket/dest.apk
 	CPIDContent        string // cpid content
 	OSSEndpoint        string

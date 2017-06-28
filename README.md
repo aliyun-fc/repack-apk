@@ -27,10 +27,9 @@ So it uses little disk space and is very efficient.
 ## Example
 
 ```bash
-# git clone repacker
-
-cd repacker
-go build -o repack *.go
+git clone https://github.com/aliyun-fc/repack-apk
+cd repack-apk
+go build -o repack
 ./repack -cert-name ANDROIDR -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret -priv-pem /tmp/zip/test.pem -work-dir /tmp/zip
 ```
 
