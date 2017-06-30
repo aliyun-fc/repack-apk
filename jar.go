@@ -8,6 +8,7 @@ import (
 
 	"github.com/rsc/zipmerge/zip"
 	"os"
+	"time"
 )
 
 // consts ...
@@ -119,7 +120,14 @@ func copyFile(w *zip.Writer, to, src string) error {
 		return err
 	}
 	defer sf.Close()
-	df, err := w.Create(to)
+
+	header := &zip.FileHeader{
+		Name:   to,
+		Method: zip.Deflate,
+	}
+	header.SetModTime(time.Now())
+
+	df, err := w.CreateHeader(header)
 	if err != nil {
 		return err
 	}

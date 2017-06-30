@@ -78,8 +78,8 @@ func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error)
 	if _, err := asn1.Unmarshal(b, &c); err != nil {
 		return nil, err
 	}
-	c.TBSCertificate.Validity.NotBefore = time.Now()
-	c.TBSCertificate.Validity.NotAfter = time.Now().AddDate(CertValidYears, 0, 0)
+	c.TBSCertificate.Validity.NotBefore = time.Now().AddDate(-1, 0, 0).UTC()
+	c.TBSCertificate.Validity.NotAfter = time.Now().AddDate(CertValidYears, 0, 0).UTC()
 
 	h := sha1.New()
 	h.Write(msg)
