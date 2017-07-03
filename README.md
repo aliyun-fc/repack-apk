@@ -33,7 +33,7 @@ go build -o repack
 
 ./repack -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk \
   -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret \
-  -cert-pem test-cert.pem -priv-pem /tmp/zip/test.pem \
+  -cert-pem /tmp/test-cert.pem -priv-pem /tmp/test-priv.pem \
   -work-dir /tmp/zip
 ```
 
