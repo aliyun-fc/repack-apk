@@ -30,7 +30,11 @@ So it uses little disk space and is very efficient.
 git clone https://github.com/aliyun-fc/repack-apk
 cd repack-apk
 go build -o repack
-./repack -cert-name ANDROIDR -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret -priv-pem /tmp/zip/test.pem -work-dir /tmp/zip
+
+./repack -cpid 12345678 -source rockuw/qq.apk -dest rockuw/qq2.apk \
+  -oss-ep http://oss-cn-hangzhou.aliyuncs.com -oss-id akid -oss-key aksecret \
+  -cert-pem test-cert.pem -priv-pem /tmp/zip/test.pem \
+  -work-dir /tmp/zip
 ```
 
 ## Convert keystore
@@ -39,7 +43,12 @@ go build -o repack
 
 ```bash
 keytool -importkeystore -srckeystore test.keystore -destkeystore test.p12 -deststoretype PKCS12
-openssl pkcs12 -in test.p12 -nocerts -nodes -out test.pem
+
+# private key pem
+openssl pkcs12 -in test.p12 -nocerts -nodes -out test-priv.pem
+
+# cert pem
+openssl pkcs12 -in test.p12 -nokeys -out test-cert.pem
 ```
 
 ## How it works
