@@ -21,21 +21,38 @@ const (
 )
 
 func changeManifest(r *zip.Reader) error {
-	manifest, err := readManifest(r)
+	buf, err := readManifest(r)
 	if err != nil {
 		return err
 	}
+	manifest := string(buf)
 
 	// write MANIFEST.MF
 	digest := sha1Sum([]byte(g.CPIDContent))
-	manifest = append(manifest, []byte("Name: cpid\r\n")...)
-	manifest = append(
-		manifest,
-		[]byte(fmt.Sprintf("SHA1-Digest: %s\r\n", digest))...)
-	manifest = append(manifest, []byte("\r\n")...)
+
+	cpidNameLine := fmt.Sprintf("Name: %s\r\n", CPIDPath)
+	if cpidIndex := strings.Index(manifest, cpidNameLine); cpidIndex > 0 {
+		// cpid file already exists
+		beforePart := manifest[:cpidIndex]
+		hashLineEnd := strings.Index(manifest[cpidIndex+len(cpidNameLine):], "\r\n")
+		if hashLineEnd < 0 {
+			return fmt.Errorf("malformed manifest: %s", manifest[cpidIndex:])
+		}
+		afterPart := manifest[cpidIndex+len(cpidNameLine)+hashLineEnd+2:]
+
+		manifest = beforePart
+		manifest += cpidNameLine
+		manifest += fmt.Sprintf("SHA1-Digest: %s\r\n", digest)
+		manifest += afterPart
+	} else {
+		// add cpid entry
+		manifest += cpidNameLine
+		manifest += fmt.Sprintf("SHA1-Digest: %s\r\n", digest)
+		manifest += "\r\n"
+	}
 
 	err = ioutil.WriteFile(
-		fmt.Sprintf("%s/MANIFEST.MF", g.WorkDir), manifest, 0644)
+		fmt.Sprintf("%s/MANIFEST.MF", g.WorkDir), []byte(manifest), 0644)
 	if err != nil {
 		return err
 	}
@@ -48,11 +65,11 @@ func changeManifest(r *zip.Reader) error {
 	defer sf.Close()
 
 	sf.WriteString("Signature-Version: 1.0\r\n")
-	mfDigest := sha1Sum(manifest)
+	mfDigest := sha1Sum([]byte(manifest))
 	sf.WriteString(fmt.Sprintf("SHA1-Digest-Manifest: %s\r\n", mfDigest))
 	sf.WriteString("\r\n")
 
-	entries := strings.Split(string(manifest), "\r\n")
+	entries := strings.Split(manifest, "\r\n")
 	for i := 0; i < len(entries); i++ {
 		if strings.HasPrefix(entries[i], "Name: ") {
 			nameLine := entries[i]
