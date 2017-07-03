@@ -11,7 +11,7 @@ import (
 
 // Config ...
 type Config struct {
-	CertName           string // "TEST" for TEST.SF and TEST.RSA
+	CertName           string // auto detect from *.SF
 	PrivateKeyPEM      string // /path/to/private_key.pem
 	SourceAPK          string // my-bucket/origin.apk
 	DestAPK            string // my-bucket/dest.apk
@@ -31,7 +31,6 @@ func (c Config) String() string {
 var g Config
 
 func init() {
-	flag.StringVar(&g.CertName, "cert-name", "", "cert name for .SF and .RSA")
 	flag.StringVar(&g.PrivateKeyPEM, "priv-pem", "", "private key pem")
 	flag.StringVar(&g.SourceAPK, "source", "", "source apk")
 	flag.StringVar(&g.DestAPK, "dest", "", "dest apk")

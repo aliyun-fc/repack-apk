@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/rsc/zipmerge/zip"
-	"os"
-	"time"
 )
 
 // consts ...
 const (
+	MetaInfoPath = "META-INF/"
 	ManifestPath = "META-INF/MANIFEST.MF"
 	SFPath       = "META-INF/%s.SF"
 	RSAPath      = "META-INF/%s.RSA"
@@ -33,6 +35,8 @@ func changeManifest(r *zip.Reader) error {
 	cpidNameLine := fmt.Sprintf("Name: %s\r\n", CPIDPath)
 	if cpidIndex := strings.Index(manifest, cpidNameLine); cpidIndex > 0 {
 		// cpid file already exists
+		log.Printf("cpid file exist: %s", cpidNameLine)
+
 		beforePart := manifest[:cpidIndex]
 		hashLineEnd := strings.Index(manifest[cpidIndex+len(cpidNameLine):], "\r\n")
 		if hashLineEnd < 0 {
@@ -46,6 +50,8 @@ func changeManifest(r *zip.Reader) error {
 		manifest += afterPart
 	} else {
 		// add cpid entry
+		log.Printf("add cpid file: %s", cpidNameLine)
+
 		manifest += cpidNameLine
 		manifest += fmt.Sprintf("SHA1-Digest: %s\r\n", digest)
 		manifest += "\r\n"
@@ -112,8 +118,13 @@ func changeManifest(r *zip.Reader) error {
 }
 
 func readManifest(r *zip.Reader) ([]byte, error) {
+	var manifest []byte
+	var certName string
+
 	for _, f := range r.File {
 		if f.Name == ManifestPath {
+			log.Printf("found manifest: %s", f.Name)
+
 			fr, err := f.Open()
 			if err != nil {
 				return nil, err
@@ -123,11 +134,24 @@ func readManifest(r *zip.Reader) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			return buf, nil
+			manifest = buf
+		}
+
+		if strings.HasSuffix(f.Name, ".SF") &&
+			strings.HasPrefix(f.Name, MetaInfoPath) {
+			log.Printf("found cert file: %s", f.Name)
+
+			certName = strings.TrimSuffix(f.Name, ".SF")
+			certName = strings.TrimPrefix(certName, MetaInfoPath)
+			g.CertName = certName
+		}
+
+		if manifest != nil && certName != "" {
+			return manifest, nil
 		}
 	}
 
-	return nil, fmt.Errorf("manifest file not found")
+	return nil, fmt.Errorf("manifest or cert file not found")
 }
 
 // copyFile ...
