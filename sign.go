@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/big"
 	"time"
 )
 
@@ -29,7 +28,7 @@ func sha1Sum(msg []byte) string {
 }
 
 func signSF() ([]byte, error) {
-	sfFile := fmt.Sprintf("%s/%s.SF", g.WorkDir, g.CertName)
+	sfFile := fmt.Sprintf("%s/%s.SF", g.WorkDir, g.SigFileName)
 	sfContent, err := ioutil.ReadFile(sfFile)
 	if err != nil {
 		return nil, err
@@ -60,16 +59,22 @@ func signSF() ([]byte, error) {
 // We prepare the certificate using the x509 package, read it back in
 // to our custom data type and then write it back out with the signature.
 func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error) {
-	const serialNumber = 0x5462c4dd // arbitrary
-	name := pkix.Name{CommonName: "youzu"}
-
-	template := &x509.Certificate{
-		SerialNumber:       big.NewInt(serialNumber),
-		SignatureAlgorithm: x509.SHA1WithRSA,
-		Subject:            name,
+	buf, err := ioutil.ReadFile(g.CertPEM)
+	if err != nil {
+		return nil, err
 	}
 
-	b, err := x509.CreateCertificate(rand, template, template, priv.Public(), priv)
+	block, _ := pem.Decode(buf)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode pem: %s", g.CertPEM)
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := x509.CreateCertificate(rand, cert, cert, priv.Public(), priv)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +83,6 @@ func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error)
 	if _, err := asn1.Unmarshal(b, &c); err != nil {
 		return nil, err
 	}
-	c.TBSCertificate.Validity.NotBefore = time.Now().AddDate(-1, 0, 0).UTC()
-	c.TBSCertificate.Validity.NotAfter = time.Now().AddDate(CertValidYears, 0, 0).UTC()
 
 	h := sha1.New()
 	h.Write(msg)
@@ -103,8 +106,8 @@ func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error)
 			SignerInfos: []signerInfo{{
 				Version: 1,
 				IssuerAndSerialNumber: issuerAndSerialNumber{
-					Issuer:       name.ToRDNSequence(),
-					SerialNumber: serialNumber,
+					Issuer:       cert.Issuer.ToRDNSequence(),
+					SerialNumber: int(cert.SerialNumber.Int64()),
 				},
 				DigestAlgorithm: pkix.AlgorithmIdentifier{
 					Algorithm:  oidSHA1,

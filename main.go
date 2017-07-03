@@ -11,8 +11,9 @@ import (
 
 // Config ...
 type Config struct {
-	CertName           string // auto detect from *.SF
+	SigFileName        string // auto detect from *.SF
 	PrivateKeyPEM      string // /path/to/private_key.pem
+	CertPEM            string // /path/to/cert.pem
 	SourceAPK          string // my-bucket/origin.apk
 	DestAPK            string // my-bucket/dest.apk
 	CPIDContent        string // cpid content
@@ -31,6 +32,7 @@ func (c Config) String() string {
 var g Config
 
 func init() {
+	flag.StringVar(&g.CertPEM, "cert-pem", "", "cert pem")
 	flag.StringVar(&g.PrivateKeyPEM, "priv-pem", "", "private key pem")
 	flag.StringVar(&g.SourceAPK, "source", "", "source apk")
 	flag.StringVar(&g.DestAPK, "dest", "", "dest apk")

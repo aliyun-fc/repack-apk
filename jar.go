@@ -18,6 +18,7 @@ const (
 	ManifestPath = "META-INF/MANIFEST.MF"
 	SFPath       = "META-INF/%s.SF"
 	RSAPath      = "META-INF/%s.RSA"
+	SigFileName  = "CERT"
 	CPIDPath     = "cpid"
 	LineWidth    = 70
 )
@@ -64,7 +65,7 @@ func changeManifest(r *zip.Reader) error {
 	}
 
 	// write CERT.SF
-	sf, err := os.Create(fmt.Sprintf("%s/%s.SF", g.WorkDir, g.CertName))
+	sf, err := os.Create(fmt.Sprintf("%s/%s.SF", g.WorkDir, g.SigFileName))
 	if err != nil {
 		return err
 	}
@@ -114,12 +115,11 @@ func changeManifest(r *zip.Reader) error {
 	}
 
 	return ioutil.WriteFile(
-		fmt.Sprintf("%s/%s.RSA", g.WorkDir, g.CertName), rsa, 0644)
+		fmt.Sprintf("%s/%s.RSA", g.WorkDir, g.SigFileName), rsa, 0644)
 }
 
 func readManifest(r *zip.Reader) ([]byte, error) {
 	var manifest []byte
-	var certName string
 
 	for _, f := range r.File {
 		if f.Name == ManifestPath {
@@ -139,19 +139,27 @@ func readManifest(r *zip.Reader) ([]byte, error) {
 
 		if strings.HasSuffix(f.Name, ".SF") &&
 			strings.HasPrefix(f.Name, MetaInfoPath) {
-			log.Printf("found cert file: %s", f.Name)
+			log.Printf("found signature file: %s", f.Name)
 
-			certName = strings.TrimSuffix(f.Name, ".SF")
-			certName = strings.TrimPrefix(certName, MetaInfoPath)
-			g.CertName = certName
+			sigName := strings.TrimSuffix(f.Name, ".SF")
+			sigName = strings.TrimPrefix(sigName, MetaInfoPath)
+			g.SigFileName = sigName
 		}
 
-		if manifest != nil && certName != "" {
+		if manifest != nil && g.SigFileName != "" {
 			return manifest, nil
 		}
 	}
 
-	return nil, fmt.Errorf("manifest or cert file not found")
+	if manifest == nil {
+		return nil, fmt.Errorf("manifest file not found")
+	}
+	if g.SigFileName == "" {
+		log.Printf("using signature file name: %s", SigFileName)
+		g.SigFileName = SigFileName
+	}
+
+	return manifest, nil
 }
 
 // copyFile ...
@@ -205,15 +213,15 @@ func copyMeta(w *zip.Writer) error {
 		return err
 	}
 	// CERT.SF
-	source = fmt.Sprintf("%s/%s.SF", g.WorkDir, g.CertName)
-	dest = fmt.Sprintf(SFPath, g.CertName)
+	source = fmt.Sprintf("%s/%s.SF", g.WorkDir, g.SigFileName)
+	dest = fmt.Sprintf(SFPath, g.SigFileName)
 	if err := copyFile(w, dest, source); err != nil {
 		return err
 	}
 
 	// CERT.RSA
-	source = fmt.Sprintf("%s/%s.RSA", g.WorkDir, g.CertName)
-	dest = fmt.Sprintf(RSAPath, g.CertName)
+	source = fmt.Sprintf("%s/%s.RSA", g.WorkDir, g.SigFileName)
+	dest = fmt.Sprintf(RSAPath, g.SigFileName)
 	if err := copyFile(w, dest, source); err != nil {
 		return err
 	}
