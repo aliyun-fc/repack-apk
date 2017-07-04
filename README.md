@@ -45,7 +45,8 @@ go build -o repack
 keytool -importkeystore -srckeystore test.keystore -destkeystore test.p12 -deststoretype PKCS12
 
 # private key pem
-openssl pkcs12 -in test.p12 -nocerts -nodes -out test-priv.pem
+openssl pkcs12 -in test.p12 -nocerts -nodes -out tmp-test-priv.pem
+openssl rsa -in tmp-test-priv.pem -out test-priv.pem
 
 # cert pem
 openssl pkcs12 -in test.p12 -nokeys -out test-cert.pem
