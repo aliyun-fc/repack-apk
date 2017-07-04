@@ -160,6 +160,7 @@ type tbsCertificate struct {
 	Validity     validity
 	Subject      pkix.RDNSequence // pkix.Name
 	SubjectPKI   subjectPublicKeyInfo
+	Extensions   []pkix.Extension `asn1:"tag:3,explicit"`
 }
 
 // validity is defined in rfc2459, section 4.1.
