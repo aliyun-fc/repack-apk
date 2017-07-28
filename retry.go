@@ -111,6 +111,9 @@ func (s *StoreWithRetry) GetObjectDetailedMeta(
 // PutObject ...
 func (s *StoreWithRetry) PutObject(objectKey string, reader io.Reader, options ...oss.Option) (err error) {
 	s.retry(func() error {
+		if sk, ok := reader.(io.Seeker); ok {
+			sk.Seek(0, io.SeekStart)
+		}
 		err = s.ossBucket.PutObject(objectKey, reader, options...)
 		return err
 	})
@@ -146,6 +149,10 @@ func (s *StoreWithRetry) UploadPartCopy(
 func (s *StoreWithRetry) UploadPart(imur oss.InitiateMultipartUploadResult, reader io.Reader,
 	partSize int64, partNumber int, options ...oss.Option) (resp oss.UploadPart, err error) {
 	s.retry(func() error {
+		if sk, ok := reader.(io.Seeker); ok {
+			sk.Seek(0, io.SeekStart)
+		}
+
 		resp, err = s.ossBucket.UploadPart(
 			imur, reader, partSize, partNumber, options...)
 		return err
