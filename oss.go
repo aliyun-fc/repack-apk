@@ -25,7 +25,7 @@ const (
 type Reader struct {
 	Bucket string
 	Object string
-	Client *oss.Bucket
+	Client Store
 }
 
 // OSSConfig ...
@@ -57,7 +57,7 @@ func NewReader(config OSSConfig, location string) (*Reader, error) {
 	return &Reader{
 		Bucket: bucket,
 		Object: object,
-		Client: bucketClient,
+		Client: NewStoreWithRetry(bucketClient),
 	}, nil
 }
 
@@ -121,9 +121,9 @@ type Writer struct {
 	Object    string
 	SrcBucket string
 	SrcObject string
-	Client    *oss.Bucket
+	Client    Store
 
-	srcClient *oss.Bucket
+	srcClient Store
 	buffer    []byte
 	offset    int64
 }
@@ -158,8 +158,8 @@ func NewWriter(config OSSConfig, location, srcLocation string, offset int64) (*W
 		Object:    object,
 		SrcBucket: srcBucket,
 		SrcObject: srcObject,
-		Client:    bucketClient,
-		srcClient: srcBucketClient,
+		Client:    NewStoreWithRetry(bucketClient),
+		srcClient: NewStoreWithRetry(srcBucketClient),
 		offset:    offset,
 	}, nil
 }
