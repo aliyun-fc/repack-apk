@@ -42,6 +42,10 @@ go build -o repack
 `jarsigner` takes a `.keystore` file as the source of RSA key, to convert it to golang recognizable `.pem`, we need the following lines:
 
 ```bash
+# key store
+keytool -genkey -keystore test.keystore  -alias test -keyalg RSA -validity 10000
+
+# convert to pkcs12 format
 keytool -importkeystore -srckeystore test.keystore -destkeystore test.p12 -deststoretype PKCS12
 
 # private key pem
