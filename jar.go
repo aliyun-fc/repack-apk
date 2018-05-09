@@ -82,7 +82,7 @@ func changeManifest(r *zip.Reader) error {
 			nameLine := entries[i]
 			i++
 			if len(nameLine) >= LineWidth {
-				if strings.HasPrefix(entries[i], " ") {
+				for strings.HasPrefix(entries[i], " ") {
 					nameLine += entries[i][1:]
 					i++
 				}
@@ -97,9 +97,17 @@ func changeManifest(r *zip.Reader) error {
 			}
 			msg := nameLine + "\r\n" + hashLine + "\r\n" + "\r\n"
 			md := sha1Sum([]byte(msg))
-			if len(nameLine) > LineWidth {
+			m := len(nameLine)
+			if m > LineWidth {
 				sf.WriteString(nameLine[0:LineWidth] + "\r\n")
-				sf.WriteString(" " + nameLine[70:] + "\r\n")
+				step := LineWidth - 1
+				for start := LineWidth; start < m; start += step {
+					end := start + step
+					if end > m {
+						end = m
+					}
+					sf.WriteString(" " + nameLine[start:end] + "\r\n")
+				}
 			} else {
 				sf.WriteString(nameLine + "\r\n")
 			}
