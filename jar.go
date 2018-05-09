@@ -109,7 +109,6 @@ func changeManifest(r *zip.Reader) error {
 					}
 					i++
 				}
-				sf.WriteString(" " + nameLine[70:] + "\r\n")
 			} else {
 				sf.WriteString(nameLine + "\r\n")
 			}
