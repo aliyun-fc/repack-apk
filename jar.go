@@ -100,14 +100,13 @@ func changeManifest(r *zip.Reader) error {
 			m := len(nameLine)
 			if m > LineWidth {
 				sf.WriteString(nameLine[0:LineWidth] + "\r\n")
-				i := 1
-				for i <= (m-LineWidth)/(LineWidth-1)+1 {
-					if (LineWidth-1)*i+LineWidth > m {
-						sf.WriteString(" " + nameLine[(LineWidth-1)*i+1:] + "\r\n")
-					} else {
-						sf.WriteString(" " + nameLine[(LineWidth-1)*i+1:(LineWidth-1)*i+LineWidth] + "\r\n")
+				step := LineWidth - 1
+				for start := LineWidth; start < m; start += step {
+					end := start + step
+					if end > m {
+						end = m
 					}
-					i++
+					sf.WriteString(" " + nameLine[start:end] + "\r\n")
 				}
 			} else {
 				sf.WriteString(nameLine + "\r\n")
